@@ -1,35 +1,17 @@
-val sdl = require "atmos.env.sdl"
-val SDL = require "SDL"
-val IMG = require "SDL.image"
+require "atmos.env.pico"
+val pico = require "pico"
 
-val _,REN = sdl.window @{
-	title  = "Birds - 10 (track)",
-	width  = 640,
-	height = 480,
-    flags  = @{ SDL.flags.OpenGL },
-}
+pico.zet.title "Birds - 10 (track)"
+pico.zet.size.window(640, 480)
 
-val UP = tex where {
-    sfc = IMG.load("res/bird-up.png") --> assert
-    tex = REN::createTextureFromSurface(sfc) --> assert
-}
-
-val DN = tex where {
-    sfc = IMG.load("res/bird-dn.png") --> assert
-    tex = REN::createTextureFromSurface(sfc) --> assert
-}
-
-val W,H = do {
-    val _,_,a,b = UP::query()
-    val _,_,c,d = DN::query()
-    assert((a==c) && (b==d))
-    (a,b)
-}
+val UP = "res/bird-up.png"
+val DN = "res/bird-dn.png"
+val DIM = pico.get.size.image(UP)
 
 math.randomseed()
 
 func Bird (y, speed) {
-    val rect = @{ x=0, y=y, w=W, h=H }
+    val rect = @{ x=0, y=y, w=DIM.x, h=DIM.y }
     set pub = @{
         alive = true,
         rect  = rect,
@@ -48,20 +30,20 @@ func Bird (y, speed) {
                     set img = if (tmp%2)==0 => UP => DN
                 }
             } with {
-                every :sdl.draw {
-                    REN::copy(img, nil, sdl.ints(rect))
+                every :draw {
+                    pico.output.draw.image(rect, img)
                 }
             }
         }
         set pub.alive = false
-        watching \{rect.y>(480-H)} {
+        watching \{rect.y>(480-(DIM.y/2))} {
             par {
                 every _,ms in :clock {
                     set rect.y = (rect.y + (ms * 0.5))
                 }
             } with {
-                every :sdl.draw {
-                    REN::copy(DN, nil, sdl.ints(rect))
+                every :draw {
+                    pico.output.draw.image(rect, DN)
                 }
             }
         }
@@ -69,8 +51,8 @@ func Bird (y, speed) {
             loop {
                 await @.100
                 watching @.100 {
-                    every :sdl.draw {
-                        REN::copy(DN, nil, sdl.ints(rect))
+                    every :draw {
+                        pico.output.draw.image(rect, DN)
                     }
                 }
             }
@@ -89,7 +71,7 @@ loop {
             loop _,b1 in birds {
                 loop _,b2 in birds {
                     val col = (b1!=b2) && b1.pub.alive && b2.pub.alive &&
-                                sdl.rect_vs_rect(b1.pub.rect, b2.pub.rect)
+                                pico.vs.rect_rect(b1.pub.rect,b2.pub.rect)
                     if col {
                         emit [b1] :collided
                         emit [b2] :collided
@@ -101,24 +83,20 @@ loop {
     } with {
         loop {
             val bird = do :Track {
-                every _,e in SDL.event.MouseButtonDown {
+                every _,e in :mouse.button.dn {
                     loop _,b in birds {
-                        if b.pub.alive && sdl.point_vs_rect(e,b.pub.rect) {
-                            escape('Track', b)
+                        if b.pub.alive && pico.vs.pos_rect(e,b.pub.rect) {
+                            escape(:Track, b)
                         }
                     }
                 }
             }
             watching bird {
-                val l = @{
-                    x1=640/2, y1=480,
+                val base = @{
+                    x=640/2, y=480,
                 }
-                every :sdl.draw {
-                    set l.x2 = bird.pub.rect.x + (W/2)
-                    set l.y2 = bird.pub.rect.y + (H/2)
-                    REN::setDrawColor(0xFFFFFFFF)
-                    REN::drawLine(sdl.ints(l))
-                    REN::setDrawColor(0x00000000)
+                every :draw {
+                    pico.output.draw.line(base, bird.pub.rect)
                 }
             }
         }

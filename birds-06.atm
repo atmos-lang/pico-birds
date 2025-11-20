@@ -1,30 +1,11 @@
-val sdl = require "atmos.env.sdl"
-val SDL = require "SDL"
-val IMG = require "SDL.image"
+require "atmos.env.pico"
+val pico = require "pico"
 
-val _,REN = sdl.window @{
-	title  = "Birds - 06 (pool/scope)",
-	width  = 640,
-	height = 480,
-    flags  = @{ SDL.flags.OpenGL },
-} --> assert
+pico.zet.title "Birds - 06 (pool/scope)"
+pico.zet.size.window(640, 480)
 
-val UP = tex where {
-    sfc = IMG.load("res/bird-up.png") --> assert
-    tex = REN::createTextureFromSurface(sfc) --> assert
-}
-
-val DN = tex where {
-    sfc = IMG.load("res/bird-dn.png") --> assert
-    tex = REN::createTextureFromSurface(sfc) --> assert
-}
-
-val W,H = do {
-    val _,_,a,b = UP::query()
-    val _,_,c,d = DN::query()
-    assert((a==c) && (b==d))
-    (a,b)
-}
+val UP = "res/bird-up.png"
+val DN = "res/bird-dn.png"
 
 math.randomseed()
 
@@ -44,15 +25,15 @@ func Bird (y, speed) {
                 set img = if (tmp%2)==0 => UP => DN
             }
         } with {
-            every :sdl.draw {
-                REN::copy(img, nil, @{x=xx->math.floor,y=yy->math.floor,w=W,h=H})
+            every :draw {
+                pico.output.draw.image(@{x=xx,y=yy}, img)
             }
         }
     }
 }
 
 loop {
-    watching SDL.event.MouseButtonDown {
+    watching :mouse.button.dn {
         pin birds = tasks(5)
         every @.500 {
             spawn [birds] Bird(math.random(0,480), 100 + math.random(0,100))
