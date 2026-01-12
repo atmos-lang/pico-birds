@@ -60,44 +60,42 @@ func Bird (y, speed) {
     }
 }
 
-loop {
-    pin birds = tasks(5)
-    par {
-        every @.500 {
-            spawn [birds] Bird(math.random(0,480), 100 + math.random(0,100))
+pin birds = tasks(5)
+par {
+    every @.500 {
+        spawn [birds] Bird(math.random(0,480), 100 + math.random(0,100))
+    }
+} with {
+    every :clock {
+        loop _,b1 in birds {
+            loop _,b2 in birds {
+                val col = (b1!=b2) && b1.pub.alive && b2.pub.alive &&
+                            pico.vs.rect_rect(b1.pub.rect,b2.pub.rect)
+                if col {
+                    emit [b1] :collided
+                    emit [b2] :collided
+                    break
+                }
+            }
         }
-    } with {
-        every :clock {
-            loop _,b1 in birds {
-                loop _,b2 in birds {
-                    val col = (b1!=b2) && b1.pub.alive && b2.pub.alive &&
-                                pico.vs.rect_rect(b1.pub.rect,b2.pub.rect)
-                    if col {
-                        emit [b1] :collided
-                        emit [b2] :collided
-                        break
+    }
+} with {
+    loop {
+        val bird = do :Track {
+            every _,e in :mouse.button.dn {
+                loop _,b in birds {
+                    if b.pub.alive && pico.vs.pos_rect(e,b.pub.rect) {
+                        escape(:Track, b)
                     }
                 }
             }
         }
-    } with {
-        loop {
-            val bird = do :Track {
-                every _,e in :mouse.button.dn {
-                    loop _,b in birds {
-                        if b.pub.alive && pico.vs.pos_rect(e,b.pub.rect) {
-                            escape(:Track, b)
-                        }
-                    }
-                }
+        watching bird {
+            val base = @{
+                x=640/2, y=480,
             }
-            watching bird {
-                val base = @{
-                    x=640/2, y=480,
-                }
-                every :draw {
-                    pico.output.draw.line(base, bird.pub.rect)
-                }
+            every :draw {
+                pico.output.draw.line(base, bird.pub.rect)
             }
         }
     }
