@@ -2,7 +2,9 @@ require "atmos.env.pico"
 val pico = require "pico"
 
 pico.zet.title "Birds - 06 (pool/scope)"
-pico.zet.size.window(640, 480)
+val dim = @{w=640,h=480}
+pico.zet.view @{ grid=false, window=dim, world=dim }
+
 
 val UP = "res/bird-up.png"
 val DN = "res/bird-dn.png"
@@ -13,20 +15,20 @@ func Bird (y, speed) {
     var xx  = 0
     var yy  = y
     var img = DN
-    watching \{xx>640} {
+    watching \{xx>1} {
         par {
             var ang = 0
             every _,ms in :clock {
                 val v = ms * speed
                 set xx = xx + (v/1000)
-                set yy = y - ((speed/5) * math.sin(ang))
-                set ang = ang + ((3.14*v)/100000)
+                set yy = y - ((speed * math.sin(ang)) / 5)
+                set ang = ang + ((3.14*v)/100)
                 val tmp = ((ang+(3.14/2)) / 3.14) --> math.floor
                 set img = if (tmp%2)==0 => UP => DN
             }
         } with {
             every :draw {
-                pico.output.draw.image(@{x=xx,y=yy}, img)
+                pico.output.draw.image(img, @{'C',x=xx,y=yy,w=0,h=0})
             }
         }
     }
@@ -36,7 +38,10 @@ loop {
     watching :mouse.button.dn {
         pin birds = tasks(5)
         every @.500 {
-            spawn [birds] Bird(math.random(0,480), 100 + math.random(0,100))
+            spawn [birds] Bird(y,s) where {
+                y = math.random()
+                s = 0.15 + (math.random()/10)
+            }
         }
     }
 }

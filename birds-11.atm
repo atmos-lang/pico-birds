@@ -2,48 +2,50 @@ require "atmos.env.pico"
 val pico = require "pico"
 
 pico.zet.title "Birds - 11 (pause)"
-pico.zet.size.window(640, 480)
+val dim = @{w=640,h=480}
+pico.zet.view @{ grid=false, window=dim, world=dim }
+
 
 val UP = "res/bird-up.png"
 val DN = "res/bird-dn.png"
-val DIM = pico.get.size.image(UP)
+val DIM = pico.get.image(UP, @{'%'})
 
 math.randomseed()
 
 func Bird (y, speed) {
-    val rect = @{ x=0, y=y, w=DIM.x, h=DIM.y }
+    val rect = @{ 'C', x=0, y=y, w=DIM.w, h=DIM.h }
     set pub = @{
         alive = true,
         rect  = rect,
     }
     var img = DN
-    watching \{rect.x>640} {
+    watching \{rect.x>1} {
         watching :collided {
             par {
                 var ang = 0
                 every _,ms in :clock {
                     val v = ms * speed
                     set rect.x = (rect.x + (v/1000))
-                    set rect.y = (y - ((speed/5) * math.sin(ang)))
-                    set ang = ang + ((3.14*v)/100000)
+                    set rect.y = y - ((speed * math.sin(ang)) / 5)
+                    set ang = ang + ((3.14*v)/100)
                     val tmp = ((ang+(3.14/2))/3.14) --> math.floor
                     set img = if (tmp%2)==0 => UP => DN
                 }
             } with {
                 every :draw {
-                    pico.output.draw.image(rect, img)
+                    pico.output.draw.image(img, rect)
                 }
             }
         }
         set pub.alive = false
-        watching \{rect.y>(480-(DIM.y/2))} {
+        watching \{rect.y>0.9} {
             par {
                 every _,ms in :clock {
-                    set rect.y = (rect.y + (ms * 0.5))
+                    set rect.y = rect.y + (ms/1000)
                 }
             } with {
                 every :draw {
-                    pico.output.draw.image(rect, DN)
+                    pico.output.draw.image(DN, rect)
                 }
             }
         }
@@ -52,7 +54,7 @@ func Bird (y, speed) {
                 await @.100
                 watching @.100 {
                     every :draw {
-                        pico.output.draw.image(rect, DN)
+                        pico.output.draw.image(DN, rect)
                     }
                 }
             }
@@ -66,8 +68,8 @@ par {
         par {
             every @.500 {
                 spawn [birds] Bird(y,s) where {
-                    y = math.random(0, 480)
-                    s = 100 + math.random(0,100)
+                    y = math.random()
+                    s = 0.15 + (math.random()/10)
                 }
             }
         } with {
@@ -96,9 +98,7 @@ par {
                     }
                 }
                 watching bird {
-                    val base = @{
-                        x=640/2, y=480,
-                    }
+                    val base = @{ 'C', x=0.5, y=1 }
                     every :draw {
                         pico.output.draw.line(base, bird.pub.rect)
                     }
@@ -107,13 +107,15 @@ par {
         }
     }
 } with {
-    val pt = pico.pos(50, 50)
+    val img = "res/pause.png"
+    val dim = pico.get.image(img, @{'%'})
+    val r = @{ 'C', x=0.5, y=0.5, w=dim.x, h=dim.y }
     loop {
         await(:key.dn, 'P')
         emit(:Show, false)
         watching :key.dn, 'P' {
             every :draw {
-                pico.output.draw.image(pt, "res/pause.png")
+                pico.output.draw.image(img, r)
             }
         }
         emit(:Show, true)
