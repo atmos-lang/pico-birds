@@ -2,8 +2,8 @@ require "atmos.env.pico"
 val pico = require "pico"
 
 pico.zet.title "Birds - 06 (pool/scope)"
-val dim = @{w=640,h=480}
-pico.zet.view @{ grid=false, window=dim, world=dim }
+val dim = @{'!',w=640,h=480}
+pico.zet.view @{ window=dim, world=dim }
 
 
 val UP = "res/bird-up.png"
@@ -28,7 +28,7 @@ func Bird (y, speed) {
             }
         } with {
             every :draw {
-                pico.output.draw.image(img, @{'C',x=xx,y=yy,w=0,h=0})
+                pico.output.draw.image(img, @{'%',x=xx,y=yy})
             }
         }
     }
