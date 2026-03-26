@@ -1,9 +1,8 @@
 require "atmos.env.pico"
 val pico = require "pico"
 
-pico.zet.title "Birds - 01 (task)"
-val dim = @{'!',w=640,h=480}
-pico.zet.view @{ window=dim, world=dim }
+pico.zet.window @{ title="Birds - 01 (task)" }
+pico.zet.dim @{'!', w=640, h=480}
 
 
 val UP = "res/bird-up.png"
