@@ -5,10 +5,9 @@ pico.zet.window @{ title="Birds - 11 (pause)" }
 pico.zet.dim @{'!', w=640, h=480}
 
 
-val UP = "res/bird-up.png"
-val DN = "res/bird-dn.png"
-val pct = @{'%'}
-pico.get.image(UP, pct)
+pico.layer.image(nil, :up, "res/bird-up.png")
+pico.layer.image(nil, :dn, "res/bird-dn.png")
+val pct = pico.get.image("%", "res/bird-up.png")
 
 math.randomseed()
 
@@ -18,7 +17,7 @@ func Bird (y, speed) {
         alive = true,
         rect  = rect,
     }
-    var img = DN
+    var img = :dn
     watching \{rect.x>1} {
         watching :collided {
             par {
@@ -27,13 +26,13 @@ func Bird (y, speed) {
                     val v = ms * speed
                     set rect.x = (rect.x + (v/1000))
                     set rect.y = y - ((speed * math.sin(ang)) / 5)
-                    set ang = ang + ((3.14*v)/100)
-                    val tmp = ((ang+(3.14/2))/3.14) --> math.floor
-                    set img = if (tmp%2)==0 => UP => DN
+                    set ang = ang + ((math.pi*v)/100)
+                    val tmp = ((ang+(math.pi/2))/math.pi) --> math.floor
+                    set img = if (tmp%2)==0 => :up => :dn
                 }
             } with {
                 every :draw {
-                    pico.output.draw.image(img, rect)
+                    pico.output.draw.layer(img, rect)
                 }
             }
         }
@@ -45,7 +44,7 @@ func Bird (y, speed) {
                 }
             } with {
                 every :draw {
-                    pico.output.draw.image(DN, rect)
+                    pico.output.draw.layer(:dn, rect)
                 }
             }
         }
@@ -54,7 +53,7 @@ func Bird (y, speed) {
                 await @.100
                 watching @.100 {
                     every :draw {
-                        pico.output.draw.image(DN, rect)
+                        pico.output.draw.layer(:dn, rect)
                     }
                 }
             }
@@ -77,7 +76,7 @@ par {
                 loop _,b1 in birds {
                     loop _,b2 in birds {
                         val col = (b1!=b2) && b1.pub.alive && b2.pub.alive &&
-                                    pico.vs.rect_rect(b1.pub.rect,b2.pub.rect)
+                                    pico.vs.rect.rect(b1.pub.rect,b2.pub.rect)
                         if col {
                             emit [b1] :collided
                             emit [b2] :collided
@@ -91,7 +90,7 @@ par {
                 val bird = do :Track {
                     every _,e in :mouse.button.dn {
                         loop _,b in birds {
-                            if b.pub.alive && pico.vs.pos_rect(e,b.pub.rect) {
+                            if b.pub.alive && pico.vs.pos.rect(e,b.pub.rect) {
                                 escape(:Track, b)
                             }
                         }
@@ -108,8 +107,7 @@ par {
     }
 } with {
     val img = "res/pause.png"
-    val dim = @{'%'}
-    pico.get.image(img, dim)
+    val dim = pico.get.image("%", img)
     val r = @{ '%', x=0.5, y=0.5, w=dim.w, h=dim.h }
     loop {
         await(:key.dn, 'P')

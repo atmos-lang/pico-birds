@@ -5,28 +5,28 @@ pico.zet.window @{ title="Birds - 04 (bounded)" }
 pico.zet.dim @{'!', w=640, h=480}
 
 
-val UP = "res/bird-up.png"
-val DN = "res/bird-dn.png"
+pico.layer.image(nil, :up, "res/bird-up.png")
+pico.layer.image(nil, :dn, "res/bird-dn.png")
 
 math.randomseed()
 
 func Bird (y, speed) {
     var xx  = 0
     var yy  = y
-    var img = DN
+    var img = :dn
     par {
         var ang = 0
         every _,ms in :clock {
             val v = ms * speed
             set xx = xx + (v/1000)
             set yy = y - ((speed * math.sin(ang)) / 5)
-            set ang = ang + ((3.14*v)/100)
-            val tmp = ((ang+(3.14/2)) / 3.14) --> math.floor
-            set img = if (tmp%2)==0 => UP => DN
+            set ang = ang + ((math.pi*v)/100)
+            val tmp = ((ang+(math.pi/2)) / math.pi) --> math.floor
+            set img = if (tmp%2)==0 => :up => :dn
         }
     } with {
         every :draw {
-            pico.output.draw.image(img, @{'%',x=xx,y=yy})
+            pico.output.draw.layer(img, @{'%',x=xx,y=yy})
         }
     }
 }
