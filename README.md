@@ -9,12 +9,12 @@ An [Atmos][atmos] + [atmos-env-pico][env-pico] tutorial in 11 steps.
 
 ```
 sudo luarocks --lua-version=5.4 install atmos-lang 0.6
-sudo luarocks --lua-version=5.4 install atmos-env-pico 0.1
+sudo luarocks --lua-version=5.4 install atmos-env-pico 0.2
 ```
 
 # Run
 
 ```
-git checkout v0.6
+git checkout v0.7
 atmos birds-11.atm
 ```
