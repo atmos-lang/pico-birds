@@ -8,13 +8,13 @@ An [Atmos][atmos] + [atmos-env-pico][env-pico] tutorial in 11 steps.
 # Install
 
 ```
-sudo luarocks --lua-version=5.4 install atmos-lang 0.6
-sudo luarocks --lua-version=5.4 install atmos-env-pico 0.2
+sudo luarocks --lua-version=5.4 install atmos-lang 0.7
+sudo luarocks --lua-version=5.4 install atmos-env-pico 0.3
 ```
 
 # Run
 
 ```
-git checkout v0.7
+git checkout v0.8
 atmos birds-11.atm
 ```
