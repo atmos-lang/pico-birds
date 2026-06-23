@@ -1,8 +1,8 @@
 require "atmos.env.pico"
 val pico = require "pico"
 
-pico.zet.window [ title="Birds - 09 (blink)" ]
-pico.zet.dim ['!', w=640, h=480]
+pico.set.window [ title="Birds - 09 (blink)" ]
+pico.set.dim ['!', w=640, h=480]
 
 
 pico.layer.image(nil, :up, "res/bird-up.png")
