@@ -1,8 +1,8 @@
 require "atmos.env.pico"
 val pico = require "pico"
 
-pico.zet.window @{ title="Birds - 09 (blink)" }
-pico.zet.dim @{'!', w=640, h=480}
+pico.zet.window [ title="Birds - 09 (blink)" ]
+pico.zet.dim ['!', w=640, h=480]
 
 
 pico.layer.image(nil, :up, "res/bird-up.png")
@@ -11,19 +11,19 @@ val pct = pico.get.image("%", "res/bird-up.png")
 
 math.randomseed()
 
-func Bird (y, speed) {
-    val rect = @{ '%', x=0, y=y, w=pct.w, h=pct.h }
-    set pub = @{
+task Bird (y, speed) {
+    val rect = [ '%', x=0, y=y, w=pct.w, h=pct.h ]
+    set pub = [
         alive = true,
         rect  = rect,
-    }
+    ]
     var img = :dn
-    watching \{rect.x>1} {
+    watching until rect.x>1 {
         watching :collided {
             par {
                 var ang = 0
-                every _,ms in :clock {
-                    val v = ms * speed
+                loop us on :clock {
+                    val v = (speed * us) / 1000
                     set rect.x = (rect.x + (v/1000))
                     set rect.y = y - ((speed * math.sin(ang)) / 5)
                     set ang = ang + ((math.pi*v)/100)
@@ -31,28 +31,28 @@ func Bird (y, speed) {
                     set img = if (tmp%2)==0 => :up => :dn
                 }
             } with {
-                every :draw {
+                loop on :draw {
                     pico.output.draw.layer(img, rect)
                 }
             }
         }
         set pub.alive = false
-        watching \{rect.y>0.9} {
+        watching until rect.y>0.9 {
             par {
-                every _,ms in :clock {
-                    set rect.y = rect.y + (ms/1000)
+                loop us on :clock {
+                    set rect.y = rect.y + ((us/1000)/1000)
                 }
             } with {
-                every :draw {
+                loop on :draw {
                     pico.output.draw.layer(:dn, rect)
                 }
             }
         }
-        watching @1 {
+        watching 1s {
             loop {
-                await @.100
-                watching @.100 {
-                    every :draw {
+                await 100ms
+                watching 100ms {
+                    loop on :draw {
                         pico.output.draw.layer(:dn, rect)
                     }
                 }
@@ -63,21 +63,21 @@ func Bird (y, speed) {
 
 pin birds = tasks(5)
 par {
-    every @.500 {
-        spawn [birds] Bird(y,s) where {
+    loop on 500ms {
+        spawn @birds Bird(y,s) where {
             y = math.random()
             s = 0.15 + (math.random()/10)
         }
     }
 } with {
-    every :clock {
+    loop on :clock {
         loop _,b1 in birds {
             loop _,b2 in birds {
                 val col = (b1!=b2) && b1.pub.alive && b2.pub.alive &&
                             pico.vs.rect.rect(b1.pub.rect,b2.pub.rect)
                 if col {
-                    emit [b1] :collided
-                    emit [b2] :collided
+                    emit @b1 :collided
+                    emit @b2 :collided
                     break
                 }
             }

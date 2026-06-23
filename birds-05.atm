@@ -1,8 +1,8 @@
 require "atmos.env.pico"
 val pico = require "pico"
 
-pico.zet.window @{ title="Birds - 05 (termination)" }
-pico.zet.dim @{'!', w=640, h=480}
+pico.zet.window [ title="Birds - 05 (termination)" ]
+pico.zet.dim ['!', w=640, h=480]
 
 
 pico.layer.image(nil, :up, "res/bird-up.png")
@@ -10,15 +10,15 @@ pico.layer.image(nil, :dn, "res/bird-dn.png")
 
 math.randomseed()
 
-func Bird (y, speed) {
+task Bird (y, speed) {
     var xx  = 0
     var yy  = y
     var img = :dn
-    watching \{xx>1} {
+    watching until xx>1 {
         par {
             var ang = 0
-            every _,ms in :clock {
-                val v = ms * speed
+            loop us on :clock {
+                val v = (speed * us) / 1000
                 set xx = xx + (v/1000)
                 set yy = y - ((speed * math.sin(ang)) / 5)
                 set ang = ang + ((math.pi*v)/100)
@@ -26,16 +26,16 @@ func Bird (y, speed) {
                 set img = if (tmp%2)==0 => :up => :dn
             }
         } with {
-            every :draw {
-                pico.output.draw.layer(img, @{'%',x=xx,y=yy})
+            loop on :draw {
+                pico.output.draw.layer(img, ['%',x=xx,y=yy])
             }
         }
     }
 }
 
 pin birds = tasks(5)
-every @.500 {
-    spawn [birds] Bird(y,s) where {
+loop on 500ms {
+    spawn @birds Bird(y,s) where {
         y = math.random()
         s = 0.15 + (math.random()/10)
     }
